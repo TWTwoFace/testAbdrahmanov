@@ -4,11 +4,12 @@ using testAbdrahmanov.Movement;
 using UnityEngine;
 
 
-namespace testAbdrahmanov.Invieronment
+namespace testAbdrahmanov.Envieronment
 {
-    public class LoadingZone : MonoBehaviour
+    public class LoadingActionZone : MonoBehaviour
     {
-        public event Action Loaded;
+        public event Action Started;
+        public event Action Finished;
         public event Action Failed;
 
         public float Progress => _loadingTimer / _timeToLoad; 
@@ -17,6 +18,7 @@ namespace testAbdrahmanov.Invieronment
 
         private Coroutine _loadingRoutine;
         private float _loadingTimer = 0;
+        private bool _loading;
 
         private void OnTriggerEnter(Collider other)
         {
@@ -29,24 +31,27 @@ namespace testAbdrahmanov.Invieronment
 
         private IEnumerator Load()
         {
+            _loading = true;
+            Started?.Invoke();
+
             while (_loadingTimer < _timeToLoad)
             {
                 _loadingTimer += Time.deltaTime;
                 yield return null;
             }
-            Loaded?.Invoke();
+
+            Finished?.Invoke();
+            _loading = false;
         }
 
         private void OnTriggerExit(Collider other)
         {
+            if (!_loading)
+                return;
+
             _loadingTimer = 0f;
             StopCoroutine(_loadingRoutine);
             Failed?.Invoke();
-        }
-
-        private void Update()
-        {
-            Debug.Log(Progress);
         }
     }
 }
